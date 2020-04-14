@@ -1,22 +1,44 @@
-import requests
 import json
+import os
+import sys
 import urllib.request
 import pandas as pd
-from pandas.io.json import json_normalize
+from pandas import json_normalize
+import plotly.graph_objects as go
+import plotly.io as pio
 
-# states = ["AL", "AK", "AZ", "AR", "CA", "CO", "CT", "DC", "DE", "FL", "GA", 
-#           "HI", "ID", "IL", "IN", "IA", "KS", "KY", "LA", "ME", "MD", 
-#           "MA", "MI", "MN", "MS", "MO", "MT", "NE", "NV", "NH", "NJ", 
-#           "NM", "NY", "NC", "ND", "OH", "OK", "OR", "PA", "RI", "SC", 
-#           "SD", "TN", "TX", "UT", "VT", "VA", "WA", "WV", "WI", "WY"]
+path = "data/"
 
-states = ["AL", "AK"]
+def mobility_tracker(feature):
+    data = pd.read_csv(os.path.join(path, feature + ".csv"))
 
-json_list = []
+    df = data[data["date"] == "2020-04-05"]
 
-for i in states:
-    with urllib.request.urlopen("https://pastelsky.github.io/covid-19-mobility-tracker/output/US/" + i + "/mobility.json") as url:
-        data = json.loads(url.read().decode())
-        json_list.append(data)
+    fig = go.Figure(data=go.Choropleth(
+        locations=df['ST'], # Spatial coordinates
+        z = df['value'].astype(float), # Data to be color-coded
+        locationmode = 'USA-states', # set of locations match entries in `locations`
+        colorscale = 'Reds',
+        colorbar_title = "Changed since Feb"    , reversescale=True
+    ))
 
-print(json_list)
+
+    fig.update_layout(
+        title_text = "Google Mobility - " + feature + " Trips",
+        geo_scope='usa', # limite map scope to USA
+    )
+
+    #fig.show()
+    if not os.path.exists("html"):
+        os.mkdir("html")
+
+    pio.write_html(fig, file="html/" + feature + ".html", auto_open=True)
+
+    if not os.path.exists("images"):
+        os.mkdir("images")
+
+    fig.write_image("images/" + feature + ".jpeg")
+
+if __name__ == "__main__":
+    a = sys.argv[1]
+    mobility_tracker(a)
