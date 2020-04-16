@@ -2,7 +2,7 @@ import json
 import os
 import urllib.request
 import pandas as pd 
-path = "C:\\Users\\Thiago\\git\\google-mobility\\data"
+path = "/data"
 
 def json_to_table(dataset, name, st):
     """
